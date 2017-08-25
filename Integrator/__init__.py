@@ -155,56 +155,109 @@ def create_of_get_conf(ofile, base_dir):
     owl2jsonld_enable = True
     config = ConfigParser.RawConfigParser()
     conf_file = config.read(ofile_config_file_abs)
+    config_file_needs_rewrite = False  # becuase there were a missing key or section
+    config_values = {
+        ar2dtool_sec_name: {
+            "enable": True
+        },
+        widoco_sec_name: {
+            "enable": True
+        },
+        oops_sec_name: {
+            "enable": True
+        },
+        owl2jsonld_sec_name: {
+            "enable": True
+        }
+    }
     if len(conf_file) == 1:
         dolog(ofile+' configuration file exists')
-        try:
-            ar2dtool_enable = config.getboolean(ar2dtool_sec_name, 'enable')
-            dolog('got ar2dtool enable value: ' + str(ar2dtool_enable))
-        except:
-            dolog('ar2dtool enable value doesnot exist')
-            ar2dtool_enable = False
-            pass
-        try:
-            widoco_enable = config.getboolean(widoco_sec_name, 'enable')
-            dolog('got widoco enable value: ' + str(widoco_enable))
-        except:
-            dolog('widoco enable value doesnot exist')
-            widoco_enable = False
-            pass
-        try:
-            oops_enable = config.getboolean(oops_sec_name, 'enable')
-            dolog('got oops enable value: ' + str(oops_enable))
-        except:
-            dolog('oops enable value doesnot exist')
-            oops_enable = False
-        try:
-            owl2jsonld_enable = config.getboolean(owl2jsonld_sec_name, 'enable')
-            dolog('got owl2jsonld enable value: ' + str(owl2jsonld_enable))
-        except:
-            dolog('owl2jsonld enable value doesnot exist')
-            owl2jsonld_enable = False
+        for section in config_values.keys():
+            try:
+                config.add_section(section)
+                config_file_needs_rewrite = True
+            except:
+                pass
+            for k in config_values[section].keys():
+                try:
+                    config_values[section][k] = config.getboolean(section, k)
+                    dolog('got %s %s value: %s' % (section, k, config_values[section][k]))
+                except:
+                    config_file_needs_rewrite = True
+                    config.set(section, k, config_values[section][k])
+                    dolog('not found %s %s' % (section, k))
+
+        # try:
+        #     ar2dtool_enable = config.getboolean(ar2dtool_sec_name, 'enable')
+        #     dolog('got ar2dtool enable value: ' + str(ar2dtool_enable))
+        # except:
+        #     dolog('ar2dtool enable value doesnot exist')
+        #     ar2dtool_enable = False
+        #     config.set(ar2dtool_sec_name, 'enable', ar2dtool_enable)
+        #     pass
+        # try:
+        #     widoco_enable = config.getboolean(widoco_sec_name, 'enable')
+        #     dolog('got widoco enable value: ' + str(widoco_enable))
+        # except:
+        #     dolog('widoco enable value doesnot exist')
+        #     widoco_enable = False
+        #     config.set(widoco_sec_name, 'enable', ar2dtool_enable)
+        #     pass
+        # try:
+        #     oops_enable = config.getboolean(oops_sec_name, 'enable')
+        #     dolog('got oops enable value: ' + str(oops_enable))
+        # except:
+        #     dolog('oops enable value doesnot exist')
+        #     oops_enable = False
+        # try:
+        #     owl2jsonld_enable = config.getboolean(owl2jsonld_sec_name, 'enable')
+        #     dolog('got owl2jsonld enable value: ' + str(owl2jsonld_enable))
+        # except:
+        #     dolog('owl2jsonld enable value doesnot exist')
+        #     owl2jsonld_enable = False
     else:
         dolog(ofile+' configuration file does not exists (not an error)')
         dolog('full path is: '+ofile_config_file_abs)
-        config.add_section(ar2dtool_sec_name)
-        config.set(ar2dtool_sec_name, 'enable', ar2dtool_enable)
-        config.add_section(widoco_sec_name)
-        config.set(widoco_sec_name, 'enable', widoco_enable)
-        config.add_section(oops_sec_name)
-        config.set(oops_sec_name, 'enable', oops_enable)
-        config.add_section(owl2jsonld_sec_name)
-        config.set(owl2jsonld_sec_name, 'enable', owl2jsonld_enable)
-        dolog('will create conf file: ' + ofile_config_file_abs)
+        config_file_needs_rewrite = True
+        for section in config_values.keys():
+            try:
+                config.add_section(section)
+            except:
+                pass
+            for k in config_values[section].keys():
+                config.set(section, k, config_values[section][k])
+
+
+
+
+        # config.add_section(ar2dtool_sec_name)
+        # config.set(ar2dtool_sec_name, 'enable', ar2dtool_enable)
+        # config.add_section(widoco_sec_name)
+        # config.set(widoco_sec_name, 'enable', widoco_enable)
+        # config.add_section(oops_sec_name)
+        # config.set(oops_sec_name, 'enable', oops_enable)
+        # config.add_section(owl2jsonld_sec_name)
+        # config.set(owl2jsonld_sec_name, 'enable', owl2jsonld_enable)
+        # dolog('will create conf file: ' + ofile_config_file_abs)
+        # try:
+        #     with open(ofile_config_file_abs, 'wb') as configfile:
+        #         config.write(configfile)
+        # except Exception as e:
+        #     dolog('exception: ')
+        #     dolog(e)
+    if config_file_needs_rewrite:
         try:
             with open(ofile_config_file_abs, 'wb') as configfile:
                 config.write(configfile)
         except Exception as e:
             dolog('exception: ')
             dolog(e)
-    return {'ar2dtool_enable': ar2dtool_enable,
-            'widoco_enable': widoco_enable,
-            'oops_enable': oops_enable,
-            'owl2jsonld_enable': owl2jsonld_enable}
+
+    return config_values
+    # return {'ar2dtool_enable': ar2dtool_enable,
+    #         'widoco_enable': widoco_enable,
+    #         'oops_enable': oops_enable,
+    #         'owl2jsonld_enable': owl2jsonld_enable}
 
 
 #######################
